@@ -3,8 +3,7 @@ class ApiserverBoot < Formula
     homepage "https://github.com/kubernetes-sigs/apiserver-builder-alpha"
     url "https://github.com/kubernetes-sigs/apiserver-builder-alpha.git",
       :using => :git,
-      :tag => "v1.18.0",
-      :revision => "95dca1d34e91d6e76c50fa4f272a77f573fd7558"
+      :branch => "v1.19.alpha.0"
     depends_on "bazel" => :build
 
     def install
