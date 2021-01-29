@@ -37,6 +37,7 @@ import (
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	genericfilters "k8s.io/apiserver/pkg/server/filters"
 	genericoptions "k8s.io/apiserver/pkg/server/options"
+	"k8s.io/apiserver/pkg/server/resourceconfig"
 	"k8s.io/apiserver/pkg/server/storage"
 	"k8s.io/apiserver/pkg/util/feature"
 	"k8s.io/client-go/informers"
@@ -320,26 +321,49 @@ func (o ServerOptions) Config(tweakConfigFuncs ...func(config *apiserver.Config)
 				}
 				return nil
 			},
-			func(cfg *genericapiserver.Config) error {
-				storageFactory := storage.NewDefaultStorageFactory(
-					o.RecommendedOptions.Etcd.StorageConfig,
-					o.RecommendedOptions.Etcd.DefaultStorageMediaType,
-					builders.Codecs,
-					storage.NewDefaultResourceEncodingConfig(builders.Scheme),
-					storage.NewResourceConfig(),
-					make(map[schema.GroupResource]string),
-				)
-				return o.RecommendedOptions.Etcd.ApplyWithStorageFactoryTo(storageFactory, cfg)
-			},
 		)
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		err := o.RecommendedOptions.Etcd.ApplyTo(&serverConfig.Config)
-		if err != nil {
-			return nil, err
-		}
+	}
+
+	err = applyOptions(&serverConfig.Config,
+		func(cfg *genericapiserver.Config) error {
+
+			// compute the storage version for each resource based on the prioritized list of available kinds
+			resources := map[schema.GroupResource]interface{}{}
+			overrides := []schema.GroupVersionResource{}
+			for _, builder := range o.APIBuilders {
+				for _, v := range builder.Versions {
+					for _, kind := range v.Kinds {
+						gr := schema.GroupResource{v.GroupVersion.Group, kind.Unversioned.GetName()}
+						if _, visited := resources[gr]; !visited {
+							overrides = append(overrides, schema.GroupVersionResource{
+								Group:    v.GroupVersion.Group,
+								Version:  v.GroupVersion.Version,
+								Resource: gr.Resource,
+							})
+							resources[gr] = struct{}{}
+						}
+					}
+				}
+			}
+			resourceEncodingConfig := storage.NewDefaultResourceEncodingConfig(builders.Scheme)
+			resourceconfig.MergeResourceEncodingConfigs(resourceEncodingConfig, overrides)
+
+			storageFactory := storage.NewDefaultStorageFactory(
+				o.RecommendedOptions.Etcd.StorageConfig,
+				o.RecommendedOptions.Etcd.DefaultStorageMediaType,
+				builders.Codecs,
+				resourceEncodingConfig,
+				storage.NewResourceConfig(),
+				make(map[schema.GroupResource]string),
+			)
+			return o.RecommendedOptions.Etcd.ApplyWithStorageFactoryTo(storageFactory, cfg)
+		},
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, tweakConfigFunc := range tweakConfigFuncs {
