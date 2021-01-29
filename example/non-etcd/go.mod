@@ -30,7 +30,7 @@ require (
 	k8s.io/kube-aggregator v0.18.4 // indirect
 	k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
 	k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89 // indirect
-	sigs.k8s.io/apiserver-builder-alpha v1.19.alpha.0
+	sigs.k8s.io/apiserver-builder-alpha v1.19.beta.0
 	sigs.k8s.io/controller-runtime v0.6.0
 	sigs.k8s.io/controller-tools v0.1.12 // indirect
 	sigs.k8s.io/kubebuilder v1.0.8 // indirect
