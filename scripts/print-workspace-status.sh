@@ -5,11 +5,10 @@ set -o nounset
 set -o pipefail
 
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
-VERSION_FILE=${SCRIPT_ROOT}/VERSION
 
-apiserver_builder_version=$(git describe --tags HEAD)
+apiserver_builder_version=$(git describe --always --tags HEAD)
 k8s_vendor=kubernetes-1.19.2
-git_commit="$(git describe --tags HEAD)"
+git_commit="$(git describe --always --tags HEAD)"
 build_date="$(date +%Y-%m-%d-%H:%M:%S)"
 
 cat <<EOF
