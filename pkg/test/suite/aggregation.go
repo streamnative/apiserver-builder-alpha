@@ -26,6 +26,8 @@ import (
 
 const (
 	envLocalAPIServerBin = "TEST_ASSET_LOCAL_APISERVER"
+	aggregatedAPIServiceName = "aggregation-service"
+	aggregatedAPIServiceNamespace = "default"
 )
 
 type Environment struct {
@@ -107,14 +109,11 @@ func (e *Environment) buildAggregatedAPIServer() (err error) {
 }
 
 func (e *Environment) installAggregatedAPIServer(group, version string) (err error) {
-	serviceName := "aggregation-service"
-	namespace := "default"
-
 	corev1Client := corev1client.NewForConfigOrDie(e.LoopbackClientConfig)
-	if _, err := corev1Client.Services(namespace).Create(context.TODO(), &corev1.Service{
+	if _, err := corev1Client.Services(aggregatedAPIServiceNamespace).Create(context.TODO(), &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceName,
-			Namespace: namespace,
+			Name:      aggregatedAPIServiceName,
+			Namespace: aggregatedAPIServiceNamespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeExternalName,
@@ -132,6 +131,16 @@ func (e *Environment) installAggregatedAPIServer(group, version string) (err err
 		return err
 	}
 
+	if group != "" && version != "" {
+		if err = e.RegisterAggregatedAPI(group, version, 5*time.Second); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (e *Environment) RegisterAggregatedAPI(group, version string, timeout time.Duration) (err error) {
 	apiserviceClient := apiregistrationv1client.NewForConfigOrDie(e.LoopbackClientConfig)
 	if _, err := apiserviceClient.APIServices().Create(context.TODO(), &apiregistrationv1.APIService{
 		ObjectMeta: metav1.ObjectMeta{
@@ -144,15 +153,15 @@ func (e *Environment) installAggregatedAPIServer(group, version string) (err err
 			GroupPriorityMinimum:  100,
 			InsecureSkipTLSVerify: true,
 			Service: &apiregistrationv1.ServiceReference{
-				Namespace: namespace,
-				Name:      serviceName,
+				Namespace: aggregatedAPIServiceNamespace,
+				Name:      aggregatedAPIServiceName,
 				Port:      pointer.Int32Ptr(int32(e.AggregatedAPIServerSecurePort)),
 			},
 		},
 	}, metav1.CreateOptions{}); err != nil {
 		return err
 	}
-	if err := wait.PollImmediate(500*time.Millisecond, 5*time.Second, func() (done bool, err error) {
+	if err := wait.PollImmediate(500*time.Millisecond, timeout, func() (done bool, err error) {
 		resp, err := http.Get("http://" + e.KubeAPIServerEnvironment.ControlPlane.APIURL().Host + "/apis/" + group + "/" + version)
 		return err == nil && resp.StatusCode == http.StatusOK, nil
 	}); err != nil {
