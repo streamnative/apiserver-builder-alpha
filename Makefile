@@ -93,6 +93,11 @@ package-linux-amd64-rpm: ## Create an RPM package. Requires jordansissel/fpm, rp
 	  --prefix /usr/local/apiserver-builder \
 	  $(NAME)-$(VERSION)-linux-amd64.tar.gz
 
+.PHONY: release
+release: GOOS=linux
+release: GOARCH=amd64
+release: build
+
 gazelle-reset:
 	bazel run \
 		//:gazelle -- \
