@@ -25,6 +25,7 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/gengo/args"
 	"k8s.io/gengo/generator"
 	"k8s.io/gengo/types"
@@ -743,4 +744,15 @@ func (apigroup *APIGroup) DoType(t *types.Type) (*Struct, []*types.Type) {
 		}
 	}
 	return s, remaining
+}
+
+func (apigroup *APIGroup) VersionsInPriorityOrder() []*APIVersion {
+	versions := []*APIVersion{}
+	for _, version := range apigroup.Versions {
+		versions = append(versions, version)
+	}
+	sort.Slice(versions, func(i, j int) bool {
+		return version.CompareKubeAwareVersionStrings(versions[i].Version, versions[j].Version) > 0
+	})
+	return versions
 }

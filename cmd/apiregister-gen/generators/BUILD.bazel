@@ -17,6 +17,7 @@ go_library(
     deps = [
         "@com_github_pkg_errors//:go_default_library",
         "@io_k8s_apimachinery//pkg/util/sets:go_default_library",
+        "@io_k8s_apimachinery//pkg/version:go_default_library",
         "@io_k8s_gengo//args:go_default_library",
         "@io_k8s_gengo//generator:go_default_library",
         "@io_k8s_gengo//namer:go_default_library",

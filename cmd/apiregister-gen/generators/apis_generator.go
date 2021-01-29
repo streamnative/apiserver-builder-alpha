@@ -96,7 +96,7 @@ var {{ $group.Group }}ApiGroup = builders.NewApiGroupBuilder(
 	"{{ $group.PkgPath}}").
 	WithUnVersionedApi({{ $group.Group }}.ApiVersion).
 	WithVersionedApis(
-		{{ range $version := $group.Versions -}}
+		{{ range $version := $group.VersionsInPriorityOrder -}}
 		{{ $group.Group }}{{ $version.Version }}.ApiVersion,
 		{{ end -}}
 	).
