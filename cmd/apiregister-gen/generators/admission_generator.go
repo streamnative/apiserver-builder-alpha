@@ -6,6 +6,7 @@ import (
 	"k8s.io/klog"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -35,6 +36,7 @@ func CreateAdmissionGenerator(apis *APIs, filename string, projectRootPath strin
 			}
 		}
 	}
+	sort.Strings(admissionKinds)
 
 	return &admissionGenerator{
 		generator.DefaultGen{OptionalName: filename},
