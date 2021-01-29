@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 [[ -f bazel_0.29.1-linux-x86_64.deb ]] || wget https://github.com/bazelbuild/bazel/releases/download/0.29.1/bazel_0.29.1-linux-x86_64.deb
-[[ -f kubernetes-server-linux-amd64.tar.gz ]] || wget https://dl.k8s.io/v1.16.0/kubernetes-server-linux-amd64.tar.gz
+[[ -f kubernetes-server-linux-amd64.tar.gz ]] || wget https://dl.k8s.io/v1.19.7/kubernetes-server-linux-amd64.tar.gz
 [[ -f etcd-v3.2.0-linux-amd64.tar.gz ]] || wget https://github.com/coreos/etcd/releases/download/v3.2.0/etcd-v3.2.0-linux-amd64.tar.gz
 
 # bazel installation

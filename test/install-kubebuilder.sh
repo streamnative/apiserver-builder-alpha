@@ -2,9 +2,9 @@
 
 [[ -f /usr/local/kubebuilder/bin/kubebuilder ]] && exit 0
 
-version=1.0.8 # latest stable version
+version=2.3.1 # latest stable version
 arch=amd64
-kubernetes_version=v1.15.0
+kubernetes_version=v1.19.7
 
 # download the release
 curl -L -O "https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${version}/kubebuilder_${version}_linux_${arch}.tar.gz"
