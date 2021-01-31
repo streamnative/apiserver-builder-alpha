@@ -94,19 +94,21 @@ var (
 	{{ end -}}
 	{{ end -}}
 	{{ range $api := .UnversionedResources -}}
-	{{- if $api.ShortName -}}
 	Internal{{ $api.Kind }} = builders.NewInternalResourceWithShortcuts(
-	{{ else -}}
-	Internal{{ $api.Kind }} = builders.NewInternalResource(
-	{{ end -}}
 		"{{ $api.Resource }}",
         "{{ $api.Kind }}",
 		func() runtime.Object { return &{{ $api.Kind }}{} },
 		func() runtime.Object { return &{{ $api.Kind }}List{} },
 	{{ if $api.ShortName -}}
 		[]string{"{{ $api.ShortName }}"},
-		[]string{"aggregation"}, // TBD
+	{{ else -}}
+		nil,
 	{{ end -}}
+		[]string{
+	{{ range $category := $api.Categories -}}
+			"{{ $category }}",
+	{{ end -}}
+		},
 	)
 	Internal{{ $api.Kind }}Status = builders.NewInternalResourceStatus(
 		"{{ $api.Resource }}",

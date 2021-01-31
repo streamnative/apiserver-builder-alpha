@@ -135,7 +135,7 @@ func (b *versionedResourceBuilder) Build(
 		StorageWrapper: store,
 	}
 
-	wantsShortcuts := len(b.Unversioned.GetShortNames()) > 0
+	wantsShortcuts := len(b.Unversioned.GetShortNames()) > 0 || len(b.Unversioned.GetCategories()) > 0
 	if wantsShortcuts {
 		// plants shortnames and an opt-out category into the storage
 		storeWithShortcuts.shortNames = b.Unversioned.GetShortNames()

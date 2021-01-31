@@ -116,6 +116,8 @@ type APIResource struct {
 	Resource string
 	// ShortName is the resource short name - e.g. pc
 	ShortName string
+	// Categories is the resource categories - e.g. all
+	Categories []string
 	// REST is the rest.Storage implementation used to handle requests
 	// This field is optional. The standard REST implementation will be used
 	// by default.
@@ -230,6 +232,7 @@ func (b *APIsBuilder) ParseAPIs() {
 					Strategy:       resource.Strategy,
 					NonNamespaced:  resource.NonNamespaced,
 					ShortName:      resource.ShortName,
+					Categories:     resource.Categories,
 				}
 				apiVersion.Resources[kind] = apiResource
 				// Set the package for the api version
@@ -283,6 +286,8 @@ func (b *APIsBuilder) ParseIndex() {
 		r.Version = GetVersion(c, r.Group)
 		r.Kind = GetKind(c, r.Group)
 		r.Domain = b.Domain
+
+		r.Categories = ParseCategoriesTag(b.GetCategoriesTag(c))
 
 		rt := ParseResourceTag(b.GetResourceTag(c))
 
@@ -412,6 +417,19 @@ func ParseResourceTag(tag string) ResourceTags {
 	return result
 }
 
+type Categories []string
+
+// ParseCategoriesTag parses the categories in a "+kubebuilder:categories" comment
+func ParseCategoriesTag(tag string) Categories {
+	var result Categories
+	for _, elem := range strings.Split(tag, ",") {
+		if elem != "" {
+			result = append(result, elem)
+		}
+	}
+	return result
+}
+
 // SubresourceTags contains the tags present in a "+subresource=" comment
 type SubresourceTags struct {
 	Path        string
@@ -458,6 +476,16 @@ func (b *APIsBuilder) GetResourceTag(c *types.Type) string {
 		return kbResource
 	}
 	panic(errors.Errorf("Must specify +resource or kubebuilder:resource comment for type %v", c.Name))
+}
+
+// getCategoriesTag returns the value of the +kubebuilder:categories tags
+func (b *APIsBuilder) GetCategoriesTag(c *types.Type) string {
+	comments := Comments(c.CommentLines)
+	resource := comments.GetTag("kubebuilder:categories", "=")
+	if len(resource) == 0 {
+		return ""
+	}
+	return resource
 }
 
 func (b *APIsBuilder) GenClient(c *types.Type) bool {
