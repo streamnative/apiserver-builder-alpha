@@ -83,15 +83,14 @@ var (
 			func() runtime.Object { return &{{ $api.Kind }}{} },     // Register versioned resource
 			func() runtime.Object { return &{{ $api.Kind }}List{} }, // Register versioned resource list
 			New{{ $api.REST }},
-		)
 	{{ else -}}
 		{{$api.Group|public}}{{$api.Kind}}Storage = builders.NewApiResource( // Resource status endpoint
 			Internal{{ $api.Kind }},
 			func() runtime.Object { return &{{ $api.Kind }}{} },     // Register versioned resource
 			func() runtime.Object { return &{{ $api.Kind }}List{} }, // Register versioned resource list
 			&{{ $api.Strategy }}{builders.StorageStrategySingleton},
-		)
 	{{ end -}}
+		){{ if $api.TableConverter -}}.WithTableConverter(New{{ $api.TableConverter }}()){{ end }}
 	{{ end -}}
 	{{ range $api := .UnversionedResources -}}
 	Internal{{ $api.Kind }} = builders.NewInternalResourceWithShortcuts(

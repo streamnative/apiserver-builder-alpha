@@ -132,6 +132,10 @@ type APIResource struct {
 	StatusStrategy string
 	// NonNamespaced indicates that the resource kind is non namespaced
 	NonNamespaced bool
+	// TableConverter is the rest.TableConverter implementation used to handle table projections
+	// This field is optional. The default table converter will be used
+	// by default.
+	TableConverter string
 }
 
 type APISubresource struct {
@@ -233,6 +237,7 @@ func (b *APIsBuilder) ParseAPIs() {
 					NonNamespaced:  resource.NonNamespaced,
 					ShortName:      resource.ShortName,
 					Categories:     resource.Categories,
+					TableConverter: resource.TableConverter,
 				}
 				apiVersion.Resources[kind] = apiResource
 				// Set the package for the api version
@@ -294,6 +299,7 @@ func (b *APIsBuilder) ParseIndex() {
 		r.Resource = rt.Resource
 		r.REST = rt.REST
 		r.ShortName = rt.ShortName
+		r.TableConverter = rt.TableConverter
 
 		r.Strategy = rt.Strategy
 
@@ -390,6 +396,7 @@ type ResourceTags struct {
 	REST      string
 	Strategy  string
 	ShortName string
+	TableConverter string
 }
 
 // ParseResourceTag parses the tags in a "+resource=" comment into a ResourceTags struct
@@ -412,6 +419,8 @@ func ParseResourceTag(tag string) ResourceTags {
 			result.Strategy = value
 		case "shortname":
 			result.ShortName = value
+		case "tableconverter":
+			result.TableConverter = value
 		}
 	}
 	return result

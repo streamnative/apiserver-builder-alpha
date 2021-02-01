@@ -50,7 +50,7 @@ func NewApiResource(
 	}
 
 	return &versionedResourceBuilder{
-		unversionedBuilder, new, newList, storeBuilder, nil, nil,
+		unversionedBuilder, new, newList, nil, storeBuilder, nil, nil,
 	}
 }
 
@@ -64,7 +64,7 @@ func NewApiResourceWithStorage(
 	new, newList func() runtime.Object,
 	RESTFunc NewRESTFunc) *versionedResourceBuilder {
 	v := &versionedResourceBuilder{
-		unversionedBuilder, new, newList, nil, RESTFunc, nil,
+		unversionedBuilder, new, newList, nil, nil, RESTFunc, nil,
 	}
 	if new == nil {
 		panic(fmt.Errorf("Cannot call NewApiResourceWithStorage with nil new function."))
@@ -84,6 +84,9 @@ type versionedResourceBuilder struct {
 	// NewListFunc returns and empty unversioned instance of a resource List
 	NewListFunc func() runtime.Object
 
+	// TableConverter (optional) returns a table converter for an instance of a resource
+	TableConverter rest.TableConvertor
+
 	// StorageBuilder is used to modify the default storage, mutually exclusive with RESTFunc
 	StorageBuilder StorageBuilder
 
@@ -91,6 +94,11 @@ type versionedResourceBuilder struct {
 	RESTFunc NewRESTFunc
 
 	Storage rest.StandardStorage
+}
+
+func (b *versionedResourceBuilder) WithTableConverter(converter rest.TableConvertor) *versionedResourceBuilder {
+	b.TableConverter = converter
+	return b
 }
 
 func (b *versionedResourceBuilder) New() runtime.Object {
@@ -119,13 +127,17 @@ func (b *versionedResourceBuilder) Build(
 	group string,
 	optionsGetter generic.RESTOptionsGetter) rest.StandardStorage {
 
+	if b.TableConverter == nil {
+		b.TableConverter = rest.NewDefaultTableConvertor(b.getGroupResource(group))
+	}
+
 	// Set a default strategy
 	store := &StorageWrapper{
 		registry.Store{
 			NewFunc:                  b.Unversioned.New,     // Use the unversioned type
 			NewListFunc:              b.Unversioned.NewList, // Use the unversioned type
 			DefaultQualifiedResource: b.getGroupResource(group),
-			TableConvertor:           rest.NewDefaultTableConvertor(b.getGroupResource(group)),
+			TableConvertor:           b.TableConverter,
 		},
 	}
 	b.Storage = store
